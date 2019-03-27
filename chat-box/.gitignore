@@ -1,0 +1,13 @@
+# Babel ES6 compiles files
+dist
+
+# Dependency directory
+node_modules
+
+# Optional npm cache directory
+.npm
+
+# .env
+.env
+
+package-lock.json
