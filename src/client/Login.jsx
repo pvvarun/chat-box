@@ -14,6 +14,8 @@ import Email from "@material-ui/icons/Email";
 import People from "@material-ui/icons/People";
 import Lock from "@material-ui/icons/LockOutlined";
 import { TraineeLoginSchema } from "../config/constants";
+import { Mutation, ApolloConsumer } from "react-apollo";
+import gql from "graphql-tag";
 
 const styles = theme => ({
   container: {
@@ -49,6 +51,13 @@ const styles = theme => ({
   }
 });
 
+const LOGIN_USER = gql`
+  mutation addUser($name: String!, $email: String!) {
+    addUser(name: $name, email: $email) {
+      id
+    }
+  }
+`;
 class Login extends Component {
   constructor(props) {
     super(props);
@@ -61,6 +70,19 @@ class Login extends Component {
       touch: {}
     };
   }
+
+  addingTheUser = (name, emailAddress, addUser) => {
+    console.log("---------user info------------", name, emailAddress);
+    localStorage.setItem("nameOfLoginUser", name);
+    addUser({ variables: { name: name, email: emailAddress } })
+      .then(({ data }) => {
+        console.log('data obtained from mutation of Login.jsx is----------', data.addUser);
+        localStorage.setItem("idOfLoginUser", data.addUser.id)
+      })
+      .catch(({ error }) => {
+        console.log("--------errors are------", error);
+      });
+  };
 
   handleBlur = field => () => {
     const { touch } = this.state;
@@ -79,24 +101,6 @@ class Login extends Component {
       loading: !prevState.loading
     }));
   };
-
-  // sendData = async openSnackBar => {
-  //   const { history } = this.props;
-  //   const { emailAddress, name } = this.state;
-  //   this.loader();
-  //   const apiData = await callApi(
-  //     "https://express-training.herokuapp.com/api/user/login",
-  //     "post",
-  //     { email: emailAddress, name: name }
-  //   );
-  //   console.log("---------api Data is-------", apiData, apiData.data.data);
-  //   this.loader();
-  //   localStorage.setItem("token", apiData.data.data);
-  //   apiData.data
-  //     ? openSnackBar("success", apiData.data.message)
-  //     : openSnackBar("error", apiData.message);
-  //   history.push("/trainee");
-  // };
 
   handleValidate = () => {
     const parsedErrors = {};
@@ -157,7 +161,7 @@ class Login extends Component {
 
   render() {
     const { classes } = this.props;
-    const { errors } = this.state;
+    const { errors, name, emailAddress } = this.state;
     return (
       <div>
         <Paper className={classes.root} elevation={2}>
@@ -221,27 +225,31 @@ class Login extends Component {
               />
             </Grid>
             <Grid item xs={12}>
-              <Link
-                color="inherit"
-                underline="none"
-                component={RouterLink}
-                to="/friends"
-              >
-                <Button
-                  style={{ marginTop: "10px" }}
-                  fullWidth
-                  color="primary"
-                  variant="outlined"
-                  disabled={
-                    this.hasErrors() ||
-                    !this.isTouched() ||
-                    this.state.disableButton
-                  }
-                  // onClick={() => }
-                >
-                  SIGN IN
-                </Button>
-              </Link>
+              <Mutation mutation={LOGIN_USER}>
+                {(addUser, { data, loading, error }) => (
+                  <Link
+                    color="inherit"
+                    underline="none"
+                    component={RouterLink}
+                    to={`/friends/`}
+                  >
+                    <Button
+                      style={{ marginTop: "10px" }}
+                      fullWidth
+                      color="primary"
+                      variant="outlined"
+                      disabled={
+                        this.hasErrors() ||
+                        !this.isTouched() ||
+                        this.state.disableButton
+                      }
+                      onClick={() => this.addingTheUser(name, emailAddress, addUser)}
+                    >
+                      SIGN IN
+                    </Button>
+                  </Link>
+                )}
+              </Mutation>
             </Grid>
           </Grid>
         </Paper>
